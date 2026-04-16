@@ -10,9 +10,13 @@ import (
 
 func MigrateDb() {
 	// void running on first install
+	err := database.OpenDB()
+	if err != nil {
+		log.Fatal("Open db error: ", err)
+		return
+	}
 	db := database.GetDB()
 
-	var err error
 	tx := db.Begin()
 	defer func() {
 		if err == nil {
@@ -37,32 +41,7 @@ func MigrateDb() {
 		fmt.Println("Database is up to date, no need to migrate")
 		return
 	}
-
 	fmt.Println("Start migrating database...")
-
-	// Before 1.2
-	if dbVersion == "" {
-		err = to1_1(tx)
-		if err != nil {
-			log.Fatal("Migration to 1.1 failed: ", err)
-			return
-		}
-		err = to1_2(tx)
-		if err != nil {
-			log.Fatal("Migration to 1.2 failed: ", err)
-			return
-		}
-		dbVersion = "1.2"
-	}
-
-	// Before 1.3
-	if dbVersion[0:3] == "1.2" {
-		err = to1_3(tx)
-		if err != nil {
-			log.Fatal("Migration to 1.3 failed: ", err)
-			return
-		}
-	}
 
 	// Set version
 	err = tx.Model(&model.Setting{}).
