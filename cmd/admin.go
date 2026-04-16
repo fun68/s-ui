@@ -3,13 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/alireza0/s-ui/config"
 	"github.com/alireza0/s-ui/database"
 	"github.com/alireza0/s-ui/service"
 )
 
 func resetAdmin() {
-	err := database.InitDB(config.GetDBPath())
+	err := database.InitDB()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -25,7 +24,7 @@ func resetAdmin() {
 }
 
 func updateAdmin(username string, password string) {
-	err := database.InitDB(config.GetDBPath())
+	err := database.InitDB()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -43,7 +42,7 @@ func updateAdmin(username string, password string) {
 }
 
 func showAdmin() {
-	err := database.InitDB(config.GetDBPath())
+	err := database.InitDB()
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alireza0/s-ui/database"
 	"github.com/alireza0/s-ui/logger"
 	"github.com/alireza0/s-ui/service"
 	"github.com/alireza0/s-ui/util"
@@ -239,15 +238,6 @@ func (a *ApiService) GetKeypairs(c *gin.Context) {
 }
 
 func (a *ApiService) GetDb(c *gin.Context) {
-	exclude := c.Query("exclude")
-	db, err := database.GetDb(exclude)
-	if err != nil {
-		jsonMsg(c, "", err)
-		return
-	}
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename=s-ui_"+time.Now().Format("20060102-150405")+".db")
-	c.Writer.Write(db)
 }
 
 func (a *ApiService) postActions(c *gin.Context) (string, json.RawMessage, error) {
@@ -337,14 +327,6 @@ func (a *ApiService) SubConvert(c *gin.Context) {
 }
 
 func (a *ApiService) ImportDb(c *gin.Context) {
-	file, _, err := c.Request.FormFile("db")
-	if err != nil {
-		jsonMsg(c, "", err)
-		return
-	}
-	defer file.Close()
-	err = database.ImportDB(file)
-	jsonMsg(c, "", err)
 }
 
 func (a *ApiService) Logout(c *gin.Context) {
