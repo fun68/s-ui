@@ -79,6 +79,18 @@ func (s *ClientService) Save(tx *gorm.DB, act string, data json.RawMessage, host
 			act = "new"
 		}
 
+		if temp := []uint{}; json.Unmarshal(client.Inbounds, &temp) != nil || len(temp) == 0 {
+			var ids []uint
+			err = tx.Model(&model.Inbound{}).Pluck("id", &ids).Error
+			if err != nil {
+				return nil, err
+			}
+			client.Inbounds, err = json.Marshal(ids)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		err = s.updateLinksWithFixedInbounds(tx, []*model.Client{&client}, hostname)
 		if err != nil {
 			return nil, err
