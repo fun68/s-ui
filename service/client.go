@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -45,6 +46,17 @@ func (s *ClientService) GetAll() (*[]model.Client, error) {
 	return &clients, nil
 }
 
+func (s *ClientService) getByName(name string) (*model.Client, error) {
+	db := database.GetDB()
+	var client model.Client
+	err := db.Model(model.Client{}).
+		Where("name = ?", name).First(&client).Error
+	if err != nil {
+		return nil, err
+	}
+	return &client, nil
+}
+
 func (s *ClientService) Save(tx *gorm.DB, act string, data json.RawMessage, hostname string) ([]uint, error) {
 	var err error
 	var inboundIds []uint
@@ -55,6 +67,16 @@ func (s *ClientService) Save(tx *gorm.DB, act string, data json.RawMessage, host
 		err = json.Unmarshal(data, &client)
 		if err != nil {
 			return nil, err
+		}
+		dbClient, err := s.getByName(client.Name)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		if dbClient != nil {
+			client.Id = dbClient.Id
+			act = "edit"
+		} else {
+			act = "new"
 		}
 
 		err = s.updateLinksWithFixedInbounds(tx, []*model.Client{&client}, hostname)
@@ -159,6 +181,25 @@ func (s *ClientService) Save(tx *gorm.DB, act string, data json.RawMessage, host
 			return nil, err
 		}
 		err = tx.Where("id = ?", id).Delete(model.Client{}).Error
+		if err != nil {
+			return nil, err
+		}
+	case "delByName":
+		var name uint
+		err = json.Unmarshal(data, &name)
+		if err != nil {
+			return nil, err
+		}
+		var client model.Client
+		err = tx.Where("name = ?", name).First(&client).Error
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(client.Inbounds, &inboundIds)
+		if err != nil {
+			return nil, err
+		}
+		err = tx.Where("name = ?", name).Delete(model.Client{}).Error
 		if err != nil {
 			return nil, err
 		}
