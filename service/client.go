@@ -185,7 +185,7 @@ func (s *ClientService) Save(tx *gorm.DB, act string, data json.RawMessage, host
 			return nil, err
 		}
 	case "delByName":
-		var name uint
+		var name string
 		err = json.Unmarshal(data, &name)
 		if err != nil {
 			return nil, err
